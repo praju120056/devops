@@ -1,0 +1,29 @@
+pipeline {
+    agent any
+    stages {
+        stage('Check Delivery Metrics Endpoint') {
+            steps {
+                sh '''
+                curl -sf http://host.docker.internal:8000/metrics | grep -E "total_deliveries|pending_deliveries|on_the_way_deliveries"
+                '''
+            }
+        }
+        stage('Check Prometheus') {
+            steps {
+                sh 'curl -sf http://host.docker.internal:9090/-/healthy'
+            }
+        }
+        stage('Check Prometheus Targets') {
+            steps {
+                sh '''
+                curl -sf http://host.docker.internal:9090/api/v1/targets | grep -o '"health":"[a-z]*"'
+                '''
+            }
+        }
+        stage('Check Grafana') {
+            steps {
+                sh 'curl -sf http://host.docker.internal:3000/api/health'
+            }
+        }
+    }
+}
